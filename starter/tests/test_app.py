@@ -8,6 +8,8 @@ def test_index_route_returns_game_page(client):
 
     assert response.status_code == 200
     assert b'Sudoku Game' in response.data
+    assert b'id="hint"' in response.data
+    assert b'id="timer"' in response.data
 
 
 def test_new_route_returns_puzzle(client):
@@ -79,8 +81,8 @@ def test_check_route_returns_no_incorrect_cells_for_solution(client):
 
     assert response.status_code == 200
     data = response.get_json()
+    assert 'correct' not in data
     assert data['incorrect'] == []
-    assert len(data['correct']) == 81
     assert data['complete'] is True
 
 
@@ -94,11 +96,10 @@ def test_check_route_does_not_complete_with_empty_cells(client):
 
     assert response.status_code == 200
     assert data['incorrect'] == []
-    assert [0, 0] not in data['correct']
     assert data['complete'] is False
 
 
-def test_check_route_returns_correct_and_incorrect_cells(client):
+def test_check_route_returns_incorrect_cells_without_solution_metadata(client):
     client.get('/new?clues=35')
     board = [row[:] for row in app_module.CURRENT['solution']]
     board[0][0] = 1 if board[0][0] != 1 else 2
@@ -109,7 +110,6 @@ def test_check_route_returns_correct_and_incorrect_cells(client):
 
     assert response.status_code == 200
     assert data['incorrect'] == [[0, 0]]
-    assert [0, 1] not in data['correct']
     assert data['complete'] is False
 
 
@@ -138,3 +138,44 @@ def test_check_route_reports_multiple_incorrect_cells(client):
     data = response.get_json()
     assert data['incorrect'] == [[0, 0], [0, 1]]
     assert data['complete'] is False
+
+
+def test_hint_route_returns_one_empty_cell_and_correct_value(client):
+    client.get('/new?clues=35')
+    puzzle = app_module.CURRENT['puzzle']
+    board = [row[:] for row in puzzle]
+
+    response = client.post('/hint', json={'board': board})
+    data = response.get_json()
+
+    assert response.status_code == 200
+    row, col = data['row'], data['col']
+    assert puzzle[row][col] == 0
+    assert data['value'] == app_module.CURRENT['solution'][row][col]
+
+
+def test_hint_route_does_not_return_already_filled_cell(client):
+    client.get('/new?clues=35')
+    puzzle = app_module.CURRENT['puzzle']
+    board = [row[:] for row in puzzle]
+    empty_cells = [
+        (row, col)
+        for row in range(9)
+        for col in range(9)
+        if puzzle[row][col] == 0
+    ]
+    first_row, first_col = empty_cells[0]
+    board[first_row][first_col] = app_module.CURRENT['solution'][first_row][first_col]
+
+    response = client.post('/hint', json={'board': board})
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert (data['row'], data['col']) != (first_row, first_col)
+
+
+def test_hint_route_requires_active_game(client):
+    response = client.post('/hint', json={'board': [[0] * 9 for _ in range(9)]})
+
+    assert response.status_code == 400
+    assert response.get_json() == {'error': 'No game in progress'}
