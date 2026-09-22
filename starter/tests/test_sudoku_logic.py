@@ -71,6 +71,27 @@ def test_fill_board_produces_complete_valid_solution():
     assert is_complete_valid_board(board)
 
 
+def test_count_solutions_returns_one_for_complete_solution():
+    board = sudoku_logic.create_empty_board()
+    sudoku_logic.fill_board(board)
+
+    assert sudoku_logic.count_solutions(board) == 1
+
+
+def test_count_solutions_stops_after_finding_multiple_solutions():
+    board = sudoku_logic.create_empty_board()
+
+    assert sudoku_logic.count_solutions(board, limit=2) == 2
+
+
+def test_count_solutions_returns_zero_for_invalid_complete_board():
+    board = sudoku_logic.create_empty_board()
+    sudoku_logic.fill_board(board)
+    board[0][1] = board[0][0]
+
+    assert sudoku_logic.count_solutions(board) == 0
+
+
 def test_remove_cells_removes_requested_number_of_cells():
     board = sudoku_logic.create_empty_board()
     sudoku_logic.fill_board(board)
@@ -99,3 +120,49 @@ def test_generated_puzzle_does_not_modify_solution():
         for column in range(sudoku_logic.SIZE):
             if puzzle[row][column] == sudoku_logic.EMPTY:
                 assert solution[row][column] != sudoku_logic.EMPTY
+
+
+def test_generated_puzzle_has_exactly_one_solution():
+    puzzle, solution = sudoku_logic.generate_puzzle(clues=35)
+
+    assert sudoku_logic.count_solutions(puzzle) == 1
+    assert is_complete_valid_board(solution)
+
+
+def test_generated_puzzle_preserves_prefilled_solution_values():
+    puzzle, solution = sudoku_logic.generate_puzzle(clues=35)
+
+    for row in range(sudoku_logic.SIZE):
+        for column in range(sudoku_logic.SIZE):
+            if puzzle[row][column] != sudoku_logic.EMPTY:
+                assert puzzle[row][column] == solution[row][column]
+
+
+def test_generate_puzzle_rejects_invalid_clue_count():
+    for clues in (-1, sudoku_logic.SIZE * sudoku_logic.SIZE + 1):
+        try:
+            sudoku_logic.generate_puzzle(clues)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('Expected invalid clue count to raise ValueError')
+
+
+def test_generate_puzzle_uses_bounded_retries(monkeypatch):
+    attempts = 0
+
+    def always_fail(board, clues):
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeError('forced generation failure')
+
+    monkeypatch.setattr(sudoku_logic, 'remove_cells', always_fail)
+
+    try:
+        sudoku_logic.generate_puzzle(clues=35)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError('Expected bounded generation to raise RuntimeError')
+
+    assert attempts == sudoku_logic.MAX_GENERATION_ATTEMPTS
