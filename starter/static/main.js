@@ -18,6 +18,7 @@ function createBoardElement() {
       input.addEventListener('input', (e) => {
         const val = e.target.value.replace(/[^1-9]/g, '');
         e.target.value = val;
+        checkSolution();
       });
       rowDiv.appendChild(input);
     }
@@ -38,10 +39,11 @@ function renderPuzzle(puz) {
       if (val !== 0) {
         inp.value = val;
         inp.disabled = true;
-        inp.className += ' prefilled';
+        inp.className = 'sudoku-cell prefilled';
       } else {
         inp.value = '';
         inp.disabled = false;
+        inp.className = 'sudoku-cell';
       }
     }
   }
@@ -83,6 +85,7 @@ async function checkSolution() {
     msg.innerText = data.error;
     return;
   }
+  const correct = new Set(data.correct.map(x => x[0]*SIZE + x[1]));
   const incorrect = new Set(data.incorrect.map(x => x[0]*SIZE + x[1]));
   for (let idx = 0; idx < inputs.length; idx++) {
     const inp = inputs[idx];
@@ -90,20 +93,25 @@ async function checkSolution() {
     inp.className = 'sudoku-cell';
     if (incorrect.has(idx)) {
       inp.className = 'sudoku-cell incorrect';
+    } else if (correct.has(idx)) {
+      inp.className = 'sudoku-cell correct';
     }
   }
-  if (incorrect.size === 0) {
+  if (data.complete) {
     msg.style.color = '#388e3c';
     msg.innerText = 'Congratulations! You solved it!';
-  } else {
+  } else if (incorrect.size > 0) {
     msg.style.color = '#d32f2f';
     msg.innerText = 'Some cells are incorrect.';
+  } else {
+    msg.innerText = '';
   }
 }
 
 // Wire buttons
 window.addEventListener('load', () => {
   document.getElementById('new-game').addEventListener('click', newGame);
+  document.getElementById('difficulty').addEventListener('change', newGame);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
   // initialize
   newGame();

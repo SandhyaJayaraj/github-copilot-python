@@ -78,7 +78,39 @@ def test_check_route_returns_no_incorrect_cells_for_solution(client):
     response = client.post('/check', json={'board': app_module.CURRENT['solution']})
 
     assert response.status_code == 200
-    assert response.get_json() == {'incorrect': []}
+    data = response.get_json()
+    assert data['incorrect'] == []
+    assert len(data['correct']) == 81
+    assert data['complete'] is True
+
+
+def test_check_route_does_not_complete_with_empty_cells(client):
+    client.get('/new?clues=35')
+    board = [row[:] for row in app_module.CURRENT['solution']]
+    board[0][0] = 0
+
+    response = client.post('/check', json={'board': board})
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['incorrect'] == []
+    assert [0, 0] not in data['correct']
+    assert data['complete'] is False
+
+
+def test_check_route_returns_correct_and_incorrect_cells(client):
+    client.get('/new?clues=35')
+    board = [row[:] for row in app_module.CURRENT['solution']]
+    board[0][0] = 1 if board[0][0] != 1 else 2
+    board[0][1] = 0
+
+    response = client.post('/check', json={'board': board})
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['incorrect'] == [[0, 0]]
+    assert [0, 1] not in data['correct']
+    assert data['complete'] is False
 
 
 def test_check_route_reports_incorrect_cell_coordinates(client):
@@ -89,7 +121,9 @@ def test_check_route_reports_incorrect_cell_coordinates(client):
     response = client.post('/check', json={'board': board})
 
     assert response.status_code == 200
-    assert response.get_json() == {'incorrect': [[0, 0]]}
+    data = response.get_json()
+    assert data['incorrect'] == [[0, 0]]
+    assert data['complete'] is False
 
 
 def test_check_route_reports_multiple_incorrect_cells(client):
@@ -101,4 +135,6 @@ def test_check_route_reports_multiple_incorrect_cells(client):
     response = client.post('/check', json={'board': board})
 
     assert response.status_code == 200
-    assert response.get_json()['incorrect'] == [[0, 0], [0, 1]]
+    data = response.get_json()
+    assert data['incorrect'] == [[0, 0], [0, 1]]
+    assert data['complete'] is False
