@@ -10,6 +10,22 @@ def test_index_route_returns_game_page(client):
     assert b'Sudoku Game' in response.data
     assert b'id="hint"' in response.data
     assert b'id="timer"' in response.data
+    assert b'id="score-form"' in response.data
+    assert b'id="leaderboard-body"' in response.data
+    assert b'id="theme-toggle"' in response.data
+
+
+def test_stylesheet_contains_theme_and_responsive_grid_rules(client):
+    response = client.get('/static/styles.css')
+    stylesheet = response.data
+
+    assert response.status_code == 200
+    assert b'[data-theme="dark"]' in stylesheet
+    assert b'--box-a' in stylesheet
+    assert b'--box-b' in stylesheet
+    assert b'.sudoku-row:nth-child(-n+3)' in stylesheet
+    assert b'.sudoku-row:nth-child(n+7)' in stylesheet
+    assert b'@media (max-width: 520px)' in stylesheet
 
 
 def test_new_route_returns_puzzle(client):
