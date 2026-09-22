@@ -1,3 +1,5 @@
+import pytest
+
 import app as app_module
 
 
@@ -14,8 +16,45 @@ def test_new_route_returns_puzzle(client):
 
     assert response.status_code == 200
     assert data is not None
+    assert data['difficulty'] == 'medium'
     assert len(data['puzzle']) == 9
     assert all(len(row) == 9 for row in data['puzzle'])
+
+
+def test_new_route_defaults_to_medium_difficulty(client):
+    response = client.get('/new')
+
+    assert response.status_code == 200
+    assert response.get_json()['difficulty'] == 'medium'
+    assert sum(
+        cell != 0
+        for row in response.get_json()['puzzle']
+        for cell in row
+    ) == 35
+
+
+@pytest.mark.parametrize(
+    ('difficulty', 'expected_clues'),
+    [('easy', 45), ('medium', 35), ('hard', 30)],
+)
+def test_new_route_generates_selected_difficulty(
+    client, difficulty, expected_clues
+):
+    response = client.get(f'/new?difficulty={difficulty}')
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['difficulty'] == difficulty
+    assert sum(cell != 0 for row in data['puzzle'] for cell in row) == expected_clues
+
+
+def test_new_route_rejects_unknown_difficulty(client):
+    response = client.get('/new?difficulty=expert')
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        'error': 'difficulty must be easy, medium, or hard'
+    }
 
 
 def test_new_route_stores_current_game(client):

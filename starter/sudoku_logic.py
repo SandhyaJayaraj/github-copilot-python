@@ -4,6 +4,11 @@ import random
 SIZE = 9
 EMPTY = 0
 MAX_GENERATION_ATTEMPTS = 10
+DIFFICULTY_CLUES = {
+    'easy': 45,
+    'medium': 35,
+    'hard': 30,
+}
 
 def deep_copy(board):
     return copy.deepcopy(board)
@@ -100,6 +105,14 @@ def remove_cells(board, clues):
     if removed != target_removals:
         raise RuntimeError('Unable to generate a unique puzzle with this clue count')
 
+
+def clues_for_difficulty(difficulty):
+    try:
+        return DIFFICULTY_CLUES[difficulty]
+    except KeyError as error:
+        raise ValueError('difficulty must be easy, medium, or hard') from error
+
+
 def generate_puzzle(clues=35):
     if not 0 <= clues <= SIZE * SIZE:
         raise ValueError('clues must be between 0 and 81')
@@ -116,3 +129,7 @@ def generate_puzzle(clues=35):
         return puzzle, solution
 
     raise RuntimeError('Unable to generate a unique puzzle after bounded retries')
+
+
+def generate_puzzle_for_difficulty(difficulty):
+    return generate_puzzle(clues_for_difficulty(difficulty))

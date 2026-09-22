@@ -1,4 +1,5 @@
 import sudoku_logic
+import pytest
 
 
 def is_complete_valid_board(board):
@@ -62,6 +63,21 @@ def test_is_safe_accepts_valid_candidate():
     board = sudoku_logic.create_empty_board()
 
     assert sudoku_logic.is_safe(board, 0, 0, 5) is True
+
+
+@pytest.mark.parametrize(
+    ('difficulty', 'expected_clues'),
+    [('easy', 45), ('medium', 35), ('hard', 30)],
+)
+def test_clues_for_difficulty_returns_expected_clue_count(
+    difficulty, expected_clues
+):
+    assert sudoku_logic.clues_for_difficulty(difficulty) == expected_clues
+
+
+def test_clues_for_difficulty_rejects_unknown_difficulty():
+    with pytest.raises(ValueError):
+        sudoku_logic.clues_for_difficulty('expert')
 
 
 def test_fill_board_produces_complete_valid_solution():
@@ -146,6 +162,20 @@ def test_generate_puzzle_rejects_invalid_clue_count():
             pass
         else:
             raise AssertionError('Expected invalid clue count to raise ValueError')
+
+
+@pytest.mark.parametrize(
+    ('difficulty', 'expected_clues'),
+    [('easy', 45), ('medium', 35), ('hard', 30)],
+)
+def test_generated_difficulty_puzzle_is_unique_and_has_expected_clues(
+    difficulty, expected_clues
+):
+    puzzle, solution = sudoku_logic.generate_puzzle_for_difficulty(difficulty)
+
+    assert sum(cell != sudoku_logic.EMPTY for row in puzzle for cell in row) == expected_clues
+    assert sudoku_logic.count_solutions(puzzle) == 1
+    assert is_complete_valid_board(solution)
 
 
 def test_generate_puzzle_uses_bounded_retries(monkeypatch):
