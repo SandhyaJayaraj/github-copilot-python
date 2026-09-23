@@ -32,6 +32,8 @@ Your final application must include:
 - Avoid unnecessary use of global variables;
 - Use clear variable names;
 - Use clear function names;
+- Use concise comments for non-obvious logic, clear function names, modular
+  reusable functions, and consistent error handling;
 - Add comments only when they add value;
 - Gracefully handle errors;
 - Avoid duplication of logic where possible.
