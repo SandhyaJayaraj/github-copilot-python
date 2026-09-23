@@ -101,12 +101,30 @@ h1 {
     color: var(--text);
 }
 
-.sudoku-cell.incorrect {
+.sudoku-row .sudoku-cell.incorrect {
+    background: var(--incorrect);
+    color: #8b1e2d;
+}
+
+#sudoku-board .sudoku-cell.incorrect {
     background: var(--incorrect);
 }
 
-.sudoku-cell.correct {
+.sudoku-row .sudoku-cell.correct {
     background: var(--correct);
+    color: #155724;
+}
+
+#sudoku-board .sudoku-cell.correct {
+    background: var(--correct);
+}
+
+[data-theme="dark"] .sudoku-row .sudoku-cell.incorrect {
+    color: #ffd6d9;
+}
+
+[data-theme="dark"] .sudoku-row .sudoku-cell.correct {
+    color: #d8f3dc;
 }
 
 .sudoku-cell.hint {

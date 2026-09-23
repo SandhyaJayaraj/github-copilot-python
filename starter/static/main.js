@@ -254,6 +254,9 @@ async function checkSolution() {
   } else if (incorrect.size > 0) {
     msg.style.color = '#d32f2f';
     msg.innerText = 'Some cells are incorrect.';
+  } else if (data.incomplete) {
+    msg.style.color = '#d32f2f';
+    msg.innerText = 'Some cells are still empty.';
   } else {
     msg.innerText = '';
   }

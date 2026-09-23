@@ -99,6 +99,7 @@ def test_check_route_returns_no_incorrect_cells_for_solution(client):
     data = response.get_json()
     assert 'correct' not in data
     assert data['incorrect'] == []
+    assert data['incomplete'] is False
     assert data['complete'] is True
 
 
@@ -112,6 +113,7 @@ def test_check_route_does_not_complete_with_empty_cells(client):
 
     assert response.status_code == 200
     assert data['incorrect'] == []
+    assert data['incomplete'] is True
     assert data['complete'] is False
 
 

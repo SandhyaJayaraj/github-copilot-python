@@ -39,19 +39,18 @@ def check_solution():
     if solution is None:
         return jsonify({'error': 'No game in progress'}), 400
     incorrect = []
+    incomplete = False
     for i in range(sudoku_logic.SIZE):
         for j in range(sudoku_logic.SIZE):
             if board[i][j] == sudoku_logic.EMPTY:
+                incomplete = True
                 continue
             if board[i][j] != solution[i][j]:
                 incorrect.append([i, j])
-    complete = not incorrect and all(
-        board[i][j] == solution[i][j]
-        for i in range(sudoku_logic.SIZE)
-        for j in range(sudoku_logic.SIZE)
-    )
+    complete = not incorrect and not incomplete
     return jsonify({
         'incorrect': incorrect,
+        'incomplete': incomplete,
         'complete': complete,
     })
 
