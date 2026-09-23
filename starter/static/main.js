@@ -249,7 +249,7 @@ async function checkSolution() {
   if (data.complete) {
     stopTimer();
     msg.style.color = '#388e3c';
-    msg.innerText = 'Congratulations! You solved it!';
+    msg.innerText = `Congratulations! You solved it in ${formatTime(elapsedSeconds)} with ${hintsUsed} hints!`;
     if (!scoreSaved) showScoreForm();
   } else if (incorrect.size > 0) {
     msg.style.color = '#d32f2f';
